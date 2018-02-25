@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">ITCS 4155</string>
+    <string name="search_Bar">Search</string>
+    <string name="search_hint">Search Here...</string>
+</resources>
