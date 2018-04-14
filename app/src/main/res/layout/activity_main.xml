@@ -5,34 +5,45 @@
     android:id="@+id/relative"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.example.nrabbi.itcs4155.MainActivity">
-
-    <EditText
-        android:id="@+id/searchBar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_toStartOf="@+id/searchBtn"
-        android:ems="10"
-        android:hint="@string/search_hint"
-        android:imeOptions="actionDone"
-        android:inputType="textPersonName" />
-
-    <Button
-        android:id="@+id/searchBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBaseline="@+id/searchBar"
-        android:layout_alignBottom="@+id/searchBar"
-        android:layout_alignParentEnd="true"
-        android:text="@string/search_Bar" />
+    tools:context="com.example.nrabbi.itcs4155.MainActivity"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true" >
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@+id/searchBtn"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/searchBtn"
-        android:scrollbars="vertical" />
+        android:layout_below="@+id/searchBar" />
+
+    <Button
+        android:id="@+id/searchBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentStart="true"
+        android:background="@android:color/holo_blue_light"
+        android:foreground="?android:attr/selectableItemBackground"
+        android:text="@string/search_Bar"
+        android:textColor="@color/cardview_light_background" />
+
+    <EditText
+        android:id="@+id/searchBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_toStartOf="@+id/categorySelect"
+        android:ems="10"
+        android:hint="@string/search"
+        android:inputType="textPersonName" />
+
+    <Spinner
+        android:id="@+id/categorySelect"
+        android:layout_width="165dp"
+        android:layout_height="40dp"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentTop="true" />
+
 </RelativeLayout>

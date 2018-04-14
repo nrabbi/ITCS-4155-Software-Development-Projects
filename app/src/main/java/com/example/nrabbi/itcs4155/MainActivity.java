@@ -1,7 +1,15 @@
+// Nazmul Rabbi
+// ITCS 4155 : Event Finder
+// MainActivity.java
+// Group 12
+// 3/20/18
+
 package com.example.nrabbi.itcs4155;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
+import android.icu.text.SimpleDateFormat;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -14,15 +22,12 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.Spinner;
 import android.widget.Toast;
-
 import org.apache.commons.io.IOUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.json.JSONStringer;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -38,17 +43,42 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         setTitle("Event Finder");
 
+        final Spinner categoryList = (Spinner) findViewById(R.id.categorySelect);
+        ArrayAdapter<String> categoryAdapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.category_list));
+        categoryAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        categoryList.setAdapter(categoryAdapter);
+
         findViewById(R.id.searchBtn).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if (isConnected()){
+                    Log.d("Selected Item: " , categoryList.getSelectedItem().toString());
                     InputMethodManager inputManager = (InputMethodManager)
                             getSystemService(Context.INPUT_METHOD_SERVICE);
                     inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
                             InputMethodManager.HIDE_NOT_ALWAYS);
                     EditText search = (EditText) findViewById(R.id.searchBar);
                     String location = search.getText().toString();
-                    String connection = "http://api.eventful.com/json/events/search?&location=" + location + "&app_key=rHhzpXwdTd7mncVB";
+                    String connection = "";
+
+                    if (categoryList.getSelectedItem().toString().equals("All")) {
+                        connection = "http://api.eventful.com/json/events/search?&location=" + location + "&app_key=rHhzpXwdTd7mncVB";
+                    }
+                    else if (categoryList.getSelectedItem().toString().equals("Family") && !search.getText().toString().isEmpty()){
+                        connection = "http://api.eventful.com/json/events/search?category=family_fun_kids&location=" + location + "&app_key=rHhzpXwdTd7mncVB";
+                    }
+                    else if (categoryList.getSelectedItem().toString().equals("Festivals") && !search.getText().toString().isEmpty()){
+                        connection = "http://api.eventful.com/json/events/search?category=festivals_parades&location=" + location + "&app_key=rHhzpXwdTd7mncVB";
+                    }
+                    else if (categoryList.getSelectedItem().toString().equals("Movies") && !search.getText().toString().isEmpty()){
+                        connection = "http://api.eventful.com/json/events/search?category=movies_film&location=" + location + "&app_key=rHhzpXwdTd7mncVB";
+                    }
+                    else if (!search.getText().toString().isEmpty()){
+                        connection = "http://api.eventful.com/json/events/search?category=" + categoryList.getSelectedItem().toString().toLowerCase() + "&location=" + location + "&app_key=rHhzpXwdTd7mncVB";
+                    }
+
+                    Log.d("Output URL", connection);
+
                     new GetDataAsync().execute(connection);
                 }
                 else{
@@ -106,6 +136,11 @@ public class MainActivity extends AppCompatActivity {
                         event.state = personJson.getString("region_abbr");
                         event.country = personJson.getString("country_abbr");
                         event.zip = personJson.getString("postal_code");
+                        event.url = personJson.getString("url");
+                        event.address = personJson.getString("venue_address");
+                        event.description = personJson.getString("description");
+                        event.startTime = personJson.getString("start_time");
+                        event.endTIme = personJson.getString("stop_time");
                         result.add(event);
                     }
                 }
@@ -130,27 +165,73 @@ public class MainActivity extends AppCompatActivity {
                 Log.d("Output", result.toString());
                 Toast.makeText(MainActivity.this,  "Location: " + result.get(0).city.toString() + " " + result.get(0).state.toString() + " " + result.get(0).country.toString() + " " + result.get(0).zip.toString(), Toast.LENGTH_SHORT).show();
                 ListView ll = (ListView)findViewById(R.id.listView);
-                ArrayList<String> lst = new ArrayList<>();
+                final ArrayList<String> lst = new ArrayList<>();
+                final ArrayList<String> desc = new ArrayList<>();
+                final ArrayList<String> srt = new ArrayList<>();
+                final ArrayList<String> ed = new ArrayList<>();
+                final ArrayList<String> urlArray = new ArrayList<>();
+                final ArrayList<String> addressArray = new ArrayList<>();
 
                 for (int i=0; i<result.size();i++){
                     lst.add(result.get(i).title);
+                    desc.add(result.get(i).description);
+                    srt.add(result.get(i).startTime);
+                    ed.add(result.get(i).endTIme);
+                    urlArray.add(result.get(i).url);
+                    addressArray.add(result.get(i).address);
+                    Log.d("Address:", addressArray.get(i));
                 }
 
-                final ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1, lst);
-
+                final ArrayAdapter<String> adapter = new listAdapter(MainActivity.this, lst);
                 ll.setAdapter(adapter);
+
                 ll.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
-                    public void onItemClick(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-                        TextView txt = (TextView) arg1;
-                        System.out.println(txt.getText().toString());
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        Intent intent = new Intent(getApplicationContext(), webView.class);
+                        intent.putExtra("title", lst.get(i));
+                        intent.putExtra("url", urlArray.get(i));
+                        startActivity(intent);
                     }
                 });
+
+                ll.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener(){
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id){
+                        Intent intent = new Intent(Intent.ACTION_EDIT);
+                        intent.setType("vnd.android.cursor.item/event");
+                        intent.putExtra("title", lst.get(position));
+                        intent.putExtra("description", desc.get(position));
+                        intent.putExtra("eventLocation", addressArray.get(position));
+
+                        try {
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-M-dd hh:mm:ss");
+                            intent.putExtra("beginTime", sdf.parse(srt.get(position)).getTime());
+                            Boolean endDateCheck;
+
+                            if ("null".equals(ed.get(position)))
+                                endDateCheck = false;
+                            else
+                                endDateCheck = true;
+
+                            if (endDateCheck)
+                                intent.putExtra("endTime", sdf.parse(ed.get(position)).getTime());
+
+                        } catch (Exception e) {
+                            System.out.println("Error " + e.getMessage());
+                            return false;
+                        }
+
+                        startActivity(intent);
+                        return true;
+                    }
+                });
+
             } else {
                 progressDialog.dismiss();
                 ListView listView = (ListView)findViewById(R.id.listView);
                 listView.setAdapter(null);
-                Toast.makeText(MainActivity.this, "Error! Invalid Location", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Error! invalid location or not found", Toast.LENGTH_SHORT).show();
                 Log.d("Output", "empty result");
             }
         }
