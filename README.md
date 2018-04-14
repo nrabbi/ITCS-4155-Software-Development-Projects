@@ -7,7 +7,7 @@
 * Android
 
 ### Targets
-* ✓ Sprint 1 : Get Events based on Location
+* Sprint 1 : Get Events based on Location
 
 * Sprint 2 : Get More Info on Events
 
